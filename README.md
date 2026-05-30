@@ -1,2 +1,2 @@
-#
-source knowledge/.venv/bin/activate
+# 下载模型
+mineru-models-download

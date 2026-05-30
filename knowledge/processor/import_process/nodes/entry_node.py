@@ -67,8 +67,9 @@ if __name__ == "__main__":
     state["file_dir"] = "/Users/jing/Desktop/project/shopkeeper_brain/docs"
 
     node = EntryNode()
-    state = node(state)
+    result  = node(state)
 
-    json_str = json.dumps(state, indent=4, ensure_ascii=False)
+    # 转成 json 格式
+    json_str = json.dumps(result , indent=4, ensure_ascii=False)
     print(json_str)
 
