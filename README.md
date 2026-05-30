@@ -1,2 +1,2 @@
-# shopkeeper_brain
-智能掌柜
+#
+source knowledge/.venv/bin/activate
