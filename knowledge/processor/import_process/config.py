@@ -24,61 +24,31 @@ class ImportConfig:
     item_name_chunk_k: int = 3  # 商品名识别时使用的切片数量
     item_name_chunk_size: int = 2500  # 商品名识别时使用的切片内容长度
 
-    image_extensions: Set[str] = field(
-        default_factory=lambda: {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
-    )
+    image_extensions: Set[str] = field(default_factory=lambda: {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"})
 
     # ==================== LLM 配置 ====================
-    openai_api_base: str = field(
-        default_factory=lambda: os.getenv("OPENAI_API_BASE", "")
-    )
-    openai_api_key: str = field(
-        default_factory=lambda: os.getenv("OPENAI_API_KEY", "")
-    )
-    vl_model: str = field(
-        default_factory=lambda: os.getenv("VL_MODEL", "")
-    )
-    item_model: str = field(
-        default_factory=lambda: os.getenv("ITEM_MODEL", "")
-    )
-    default_model: str = field(
-        default_factory=lambda: os.getenv("MODEL", "")
-    )
+    openai_api_base: str = field(default_factory=lambda: os.getenv("OPENAI_API_BASE"))
+    openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
+    vl_model: str = field( default_factory=lambda: os.getenv("VL_MODEL"))
+    item_model: str = field(default_factory=lambda: os.getenv("ITEM_MODEL"))
+    default_model: str = field(default_factory=lambda: os.getenv("MODEL"))
 
     # ==================== Milvus 配置 ====================
-    milvus_url: str = field(
-        default_factory=lambda: os.getenv("MILVUS_URL", "")
-    )
-    chunks_collection: str = field(
-        default_factory=lambda: os.getenv("CHUNKS_COLLECTION", "")
-    )
-    item_name_collection: str = field(
-        default_factory=lambda: os.getenv("ITEM_NAME_COLLECTION", "")
-    )
-    entity_name_collection: str = field(
-        default_factory=lambda: os.getenv("ENTITY_NAME_COLLECTION", "")
-    )
+    milvus_url: str = field(default_factory=lambda: os.getenv("MILVUS_URL"))
+    chunks_collection: str = field(default_factory=lambda: os.getenv("CHUNKS_COLLECTION"))
+    item_name_collection: str = field(default_factory=lambda: os.getenv("ITEM_NAME_COLLECTION"))
+    entity_name_collection: str = field(default_factory=lambda: os.getenv("ENTITY_NAME_COLLECTION"))
 
 
     # ==================== MinIO 配置 ====================
-    minio_endpoint: str = field(
-        default_factory=lambda: os.getenv("MINIO_ENDPOINT", "")
-    )
-    minio_access_key: str = field(
-        default_factory=lambda: os.getenv("MINIO_ACCESS_KEY", "")
-    )
-    minio_secret_key: str = field(
-        default_factory=lambda: os.getenv("MINIO_SECRET_KEY", "")
-    )
-    minio_bucket: str = field(
-        default_factory=lambda: os.getenv("MINIO_BUCKET_NAME", "")
-    )
+    minio_endpoint: str = field(default_factory=lambda: os.getenv("MINIO_ENDPOINT"))
+    minio_access_key: str = field(default_factory=lambda: os.getenv("MINIO_ACCESS_KEY"))
+    minio_secret_key: str = field(default_factory=lambda: os.getenv("MINIO_SECRET_KEY"))
+    minio_bucket: str = field( default_factory=lambda: os.getenv("MINIO_BUCKET_NAME"))
     minio_secure: bool = False
 
     # ==================== 向量配置 ====================
-    embedding_dim: int = field(
-        default_factory=lambda: int(os.getenv("EMBEDDING_DIM", "1024"))
-    )
+    embedding_dim: int = field(default_factory=lambda: int(os.getenv("EMBEDDING_DIM", "1024")))
     embedding_batch_size: int = 8  # 修改
 
     # ==================== 速率限制 ====================

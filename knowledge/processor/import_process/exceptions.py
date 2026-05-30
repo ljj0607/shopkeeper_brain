@@ -22,21 +22,13 @@ class ImportProcessError(Exception):
 
 
 class StateFieldError(ImportProcessError):
-    """状态字段错误。
-
-    从 state 中获取必需字段缺失、为空或类型不符时抛出。
-
-    Attributes:
-        field_name: 缺失或无效的字段名称。
-        expected_type: 期望的字段类型（可选）。
-    """
-
+    """ 状态字段错误 """
     def __init__(
             self,
-            node_name: str = "",
-            field_name: str = "",
-            expected_type: type = None,
-            message: str = "",
+            node_name: str = "",    # 文件名
+            field_name: str = "",   # 参数名
+            message: str = "",  # 错误说明
+            expected_type: type = None,   # 望的字段类型（可选）
             cause: Exception = None,
     ):
         self.field_name = field_name

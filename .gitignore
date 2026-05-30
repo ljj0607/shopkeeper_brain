@@ -28,5 +28,13 @@ logs/
 # VSCode
 .vscode/
 
-docs/
+import_files/
 scripts/
+
+
+# 忽略所有 __pycache__ 目录和 .pyc 文件
+__pycache__/
+*.pyc
+*.pyo
+
+# 忽略实际环境变量文件，但保留 .env.example

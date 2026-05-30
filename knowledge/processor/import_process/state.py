@@ -1,6 +1,5 @@
 """
-导入流程状态类型定义
-定义完整的状态结构和辅助函数
+    导入流程状态类型定义
 """
 
 from typing import TypedDict, List
@@ -9,10 +8,7 @@ import copy
 
 
 class ImportGraphState(TypedDict, total=False):
-    """
-    导入流程图状态
-    包含整个导入流程中传递的所有数据
-    """
+    """ 导入流程图状态 """
 
     # ==================== 任务标识 ====================
     task_id: str  # 任务 ID，用于任务追踪(web交互的时候用到，实时看到节点的处理日志)
@@ -34,8 +30,6 @@ class ImportGraphState(TypedDict, total=False):
     # ==================== 处理中间数据 ====================
     md_content: str  # Markdown 文档内容
     chunks: List  # 文档切片列表
-
-    # ==================== 默认状态 ====================
 
 
 GRAPH_DEFAULT_STATE: ImportGraphState = {
