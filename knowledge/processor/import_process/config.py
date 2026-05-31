@@ -35,6 +35,7 @@ class ImportConfig:
 
     # ==================== Milvus 配置 ====================
     milvus_url: str = field(default_factory=lambda: os.getenv("MILVUS_URL"))
+    mineru_model_source: str= field(default_factory=lambda: os.getenv("MINERU_MODEL_SOURCE"))
     chunks_collection: str = field(default_factory=lambda: os.getenv("CHUNKS_COLLECTION"))
     item_name_collection: str = field(default_factory=lambda: os.getenv("ITEM_NAME_COLLECTION"))
     entity_name_collection: str = field(default_factory=lambda: os.getenv("ENTITY_NAME_COLLECTION"))
@@ -53,6 +54,10 @@ class ImportConfig:
 
     # ==================== 速率限制 ====================
     requests_per_minute: int = 15  # 图片总结 API 速率限制
+
+    # ==================== 其它 ====================
+
+
 
     @classmethod
     def from_env(cls) -> "ImportConfig":

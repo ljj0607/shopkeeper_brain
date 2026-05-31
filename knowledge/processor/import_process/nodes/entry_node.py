@@ -1,16 +1,14 @@
 import json
 from pathlib import Path
 
-from dns import node
-from pymilvus.orm import index
-
 from knowledge.processor.import_process.base import BaseNode, setup_logging
-from knowledge.processor.import_process.exceptions import ValidationError, StateFieldError
+from knowledge.processor.import_process.exceptions import StateFieldError
 from knowledge.processor.import_process.state import ImportGraphState, get_default_state
 
 
 class EntryNode(BaseNode):
     """" 导入节点 """
+
     name = "entry"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:
@@ -64,7 +62,7 @@ class EntryNode(BaseNode):
 if __name__ == "__main__":
     state = get_default_state()
     state["import_file_path"] = "/Users/jing/Desktop/project/shopkeeper_brain/docs/万用表RS-12的使用.pdf"
-    state["file_dir"] = "/Users/jing/Desktop/project/shopkeeper_brain/docs"
+    state["file_dir"] = "/Users/jing/Desktop/project/shopkeeper_brain/import_files"
 
     node = EntryNode()
     result  = node(state)
@@ -72,4 +70,3 @@ if __name__ == "__main__":
     # 转成 json 格式
     json_str = json.dumps(result , indent=4, ensure_ascii=False)
     print(json_str)
-

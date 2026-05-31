@@ -30,6 +30,7 @@ logs/
 
 import_files/
 scripts/
+docs/
 
 
 # 忽略所有 __pycache__ 目录和 .pyc 文件
