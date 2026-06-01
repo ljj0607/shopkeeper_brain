@@ -6,7 +6,6 @@ from typing import Tuple
 from knowledge.processor.import_process.base import BaseNode
 from knowledge.processor.import_process.exceptions import StateFieldError, PdfConversionError
 from knowledge.processor.import_process.state import ImportGraphState
-from knowledge.processor.import_process.config import ImportConfig
 
 """ PDF 转 Markdown 节点"""
 
@@ -57,8 +56,7 @@ class PdfToMdNode(BaseNode):
             "--source", "local"
         ]
         env = os.environ.copy()
-        config = ImportConfig()
-        env["MINERU_MODEL_SOURCE"] = config.mineru_model_source
+        env["MINERU_MODEL_SOURCE"] = self.config.mineru_model_source
         # 2、执行命令：启动外部子进程
         process = subprocess.Popen(
             args=cmd,
@@ -73,7 +71,7 @@ class PdfToMdNode(BaseNode):
         # 3、获取执行命令日志
         for line in process.stdout:
             print(line, end="")
-            # self.logger.info(f"Mineru:{line.strip()}")
+            self.logger.info(f"Mineru:{line.strip()}")
 
         process_code = process.wait()
         if process_code != 0:
@@ -121,4 +119,4 @@ if __name__ == "__main__":
     node = PdfToMdNode()
     result = node(state)
     json_str = json.dumps(result, indent=4, ensure_ascii=False)
-    # print(json_str)
+    print(json_str)
