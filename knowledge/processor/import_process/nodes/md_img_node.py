@@ -2,8 +2,10 @@ import base64
 import json
 import os
 import re
+import time
+from collections import deque  # 双端队列
 from pathlib import Path
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Deque
 
 from knowledge.processor.import_process.base import BaseNode, T
 from knowledge.processor.import_process.exceptions import StateFieldError, ImageProcessingError
@@ -15,18 +17,28 @@ from knowledge.utils.client.storage_clients import StorageClients
 
 class MdImageNode(BaseNode):
     """"
-        图片与摘要处理
+        Markdown 图片处理节点
+        扫描本地图片、提取图片上下文、调用 VLM 生成图片摘要、上传图片到 MinIO，并把 Markdown 中的本地图片链接替换成 MinIO 远程链接。
     """
     name = "md_img_node"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:
-        # 1、从state获取md文档内容、md文档路径对象、md文档图片目录
+        """
+            执行 Markdown 图片处理流程。
+
+            Args:
+                state: 导入流程状态，必须包含 md_path。
+
+            Returns:
+                更新后的 state，其中 md_content 会被替换为包含远程图片 URL 的 Markdown 内容。
+        """
+        # 1、获取md文档内容、md文档路径、md文档图片文件路径
         md_content, md_path_obj, md_img_path_obj = self._get_md_content_and_path(state)
-        # 2、扫描并过滤 md 文档中的图片
+        # 2、扫描本地图片、提取图片上下文
         img_info_list = self._scan_and_filter_images(md_img_path_obj, md_content)
-        # 3、调用用VLM给图片生成图片描述(摘要)
+        # 3、调用 VLM 生成图片摘要
         image_summaries = self._generate_image_summaries(img_info_list)
-        # 4、将图片保存到MinIO获取在MinIO中的图片路径
+        # 4、上传图片到 MinIO，并把 Markdown 中的本地图片链接替换成 MinIO 远程链接。
         new_md_content = self._upload_img_and_update_md(md_path_obj.stem, md_content, img_info_list, image_summaries)
         # 5.将new_md_content保存到state中
         state["md_content"] = new_md_content
@@ -83,10 +95,10 @@ class MdImageNode(BaseNode):
         return img_info_list
 
     def _extract_img_context(self, img_name: str, md_content: str, max_chars=200) -> Tuple[str, str, str]:
-        """"
+        """
             提取图片的上下文
             Args：
-                img_name：目录图片名称
+                img_name：图片名称
                 md_content：md 文档内容
             Return:
                 元组(标题、上文、下文)
@@ -99,13 +111,13 @@ class MdImageNode(BaseNode):
         for index, line in enumerate(md_lines):
             if not img_pattern.search(line):
                 continue
-            img_index = index
+            img_index = index #  记录图片行号
             # 2.截取上文
             # 定义标题正则表达式
             title_pattern = re.compile(r"^#{1,6}\s+")
             # 从图片所在行的上一行开始，向上查找每一行，匹配到最近的标题行
-            pre_title_index = -1
-            pre_title_content = ""
+            pre_title_index = -1 # 保存最近标题所在的行号
+            pre_title_content = "" # 保存最近标题的内容
             for i in range(img_index - 1, -1, -1):
                 if title_pattern.search(md_lines[i]):
                     pre_title_index = i
@@ -115,8 +127,8 @@ class MdImageNode(BaseNode):
             pre_context = "\n".join(md_lines[pre_title_index + 1:img_index])
             final_pre_context = self._extract_context_with_limit(pre_context, max_chars, "up")
 
-            # 3.截取下文
-            post_title_index = -1
+            # 3.截取下文】
+            post_title_index = len(md_lines)
             for j in range(img_index + 1, len(md_lines)):
                 if title_pattern.search(md_lines[j]):
                     post_title_index = j
@@ -133,7 +145,7 @@ class MdImageNode(BaseNode):
 
     def _extract_context_with_limit(self, content: str, max_chars: int, direction: str) -> str:
         """
-           从上下文内容中，截取指定长度的文本
+          上下文提取流程
            Args:
                post_content:   上下文内容
                max_chars:  截取长度
@@ -169,7 +181,7 @@ class MdImageNode(BaseNode):
         # 2、截取max_chars长度的上、下文
         if direction == "up":
             final_paragraph.reverse()
-        selected_paragraphs = []
+        selected_paragraphs = [] # 拼接
         if len(final_paragraph) > 0:
             selected_paragraphs.append(final_paragraph[0])
             total_chars = len(final_paragraph[0])
@@ -192,17 +204,20 @@ class MdImageNode(BaseNode):
             调用千问VLM视觉语言模型，生成图片的摘要
             Args：img_info_list
             Return：
-                {
-                    img_name:summary,
-                    img_name:summary,
-                    .....
+                image_summaries = {
+                    "img1.png": "这是一张电路原理图，展示了电压测量方法。",
+                    "img2.png": "这是一张万用表实物图，标注了各功能区域。"
                 }
         """
         image_summaries = {}
+        request_timestamps: Deque[float] = deque()
+
         # 1.创建VLM客户端
         vlm_client = AIClients.get_vlm_client()
         # 2.遍历图片信息列表
         for img_name, img_path, img_context in img_info_list:
+            # 限流
+            self._enforce_rate_limit(request_timestamps, self.config.requests_per_minute)
             # 3. 调用VLM生成图片摘要
             summary = self._get_img_summary(vlm_client, img_path, img_context)
             image_summaries[img_name] = summary
@@ -289,6 +304,35 @@ class MdImageNode(BaseNode):
 
         return new_md_content
 
+    def _enforce_rate_limit(self, request_timestamps: Deque[float], max_requests: int, window_seconds: int = 60):
+        """
+            强制执行 API 请求速率限制。
+            Args:
+                request_timestamps (Deque[float]): 请求时间戳队列。
+                max_requests (int): 窗口内最大请求数。
+                window_seconds (int, optional): 时间窗口大小（秒）。
+        """
+
+        current_time = time.time()
+        # 移除窗口外的时间戳
+        while request_timestamps and current_time - request_timestamps[0] >= window_seconds:
+            request_timestamps.popleft()
+
+        # 达到上限则等待
+        if len(request_timestamps) >= max_requests:
+            sleep_duration = window_seconds - (current_time - request_timestamps[0])
+            if sleep_duration > 0:
+                self.logger.info(f"达到速率限制，暂停 {sleep_duration:.2f} 秒...")
+                time.sleep(sleep_duration)
+
+            current_time = time.time()
+            while request_timestamps and \
+                    current_time - request_timestamps[0] >= window_seconds:
+                request_timestamps.popleft()
+        request_timestamps.append(current_time)
+
+
+
 if __name__ == '__main__':
     state = {
         "task_id": "",
@@ -306,7 +350,7 @@ if __name__ == '__main__':
     node = MdImageNode()
     result = node(state)
     json_str = json.dumps(result, indent=4, ensure_ascii=False)
-    # print(json_str)
+    print(json_str)
 
 
 
