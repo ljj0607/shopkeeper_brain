@@ -87,9 +87,6 @@ class PdfToMdNode(BaseNode):
     def _get_md_path(self, pdf_path_obj: Path,file_dir_obj: Path) -> str:
         # 1、提取 pdf 文件名
         pfd_stem = pdf_path_obj.stem
-        print(pfd_stem, )
-        print(pdf_path_obj)
-        print(file_dir_obj)
         # 2、拼接 md 文件路径
         md_path = file_dir_obj / pfd_stem / "auto" /f"{pfd_stem}.md"
         # 3、校验 md 文件
