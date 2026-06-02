@@ -1,5 +1,6 @@
 import threading
 from typing import Optional
+from typing import TypeVar, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ from dotenv import load_dotenv
 from knowledge.utils.client.client_base import BaseClientManager
 
 load_dotenv()
+
 
 class StorageClients(BaseClientManager):
     """存储类客户端：MinIO、Milvus"""

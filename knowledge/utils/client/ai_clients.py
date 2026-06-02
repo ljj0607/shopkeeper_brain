@@ -30,6 +30,7 @@ class AIClients(BaseClientManager):
     _bge_rerank_lock = threading.Lock()
 
     # ── VLM ──
+
     @classmethod
     def get_vlm_client(cls) -> OpenAI:
         return cls._get_or_create("_openai_client", cls._openai_lock, cls._create_vlm_client)
@@ -42,6 +43,7 @@ class AIClients(BaseClientManager):
 
             client = OpenAI(api_key=api_key, base_url=base_url)
             logger.info(f"OpenAI 客户端初始化成功 (base_url={base_url})")
+
             return client
 
         except EnvironmentError:
@@ -156,4 +158,16 @@ class AIClients(BaseClientManager):
 
 
 if __name__ == '__main__':
-    print(AIClients.get_vlm_client())
+    # llm_client: ChatOpenAI = AIClients.get_llm_client()
+    #
+    # llm_response = llm_client.invoke("请您给我讲一个笑话，要求输出格式是一个json")
+    #
+    # llm_result = llm_response.content
+    #
+    # import json
+    #
+    # result = json.loads(llm_result)
+    #
+    # print(result)
+    #
+    print(AIClients.get_bge_rerank_client())
