@@ -42,7 +42,6 @@ def create_import_graph() -> StateGraph:
     graph.add_edge("md_img_node", "document_spliter_node")
     graph.add_edge("document_spliter_node", "__end__")
 
-
     # 4 编译图形状
     return  graph.compile()
 

@@ -82,6 +82,8 @@ class MdImageNode(BaseNode):
         img_info_list = []
         # 1、遍历图片目录中所有的图片
         for img_name in os.listdir(md_img_path_obj):
+            if not img_name in md_content:
+                continue
             # 2、过滤图片后缀
             ext = os.path.splitext(img_name)[1]
             if ext not in self.config.image_extensions:
@@ -127,7 +129,7 @@ class MdImageNode(BaseNode):
             pre_context = "\n".join(md_lines[pre_title_index + 1:img_index])
             final_pre_context = self._extract_context_with_limit(pre_context, max_chars, "up")
 
-            # 3.截取下文】
+            # 3.截取下文
             post_title_index = len(md_lines)
             for j in range(img_index + 1, len(md_lines)):
                 if title_pattern.search(md_lines[j]):
@@ -141,6 +143,7 @@ class MdImageNode(BaseNode):
         # 4.返回上下文列表
         if len(context_list) == 0:
             return ("", "", "")
+
         return context_list[0]
 
     def _extract_context_with_limit(self, content: str, max_chars: int, direction: str) -> str:
@@ -211,11 +214,12 @@ class MdImageNode(BaseNode):
         """
         image_summaries = {}
         request_timestamps: Deque[float] = deque()
-
         # 1.创建VLM客户端
         vlm_client = AIClients.get_vlm_client()
         # 2.遍历图片信息列表
         for img_name, img_path, img_context in img_info_list:
+            if not any(item for item in img_context):
+                continue
             # 限流
             self._enforce_rate_limit(request_timestamps, self.config.requests_per_minute)
             # 3. 调用VLM生成图片摘要
@@ -330,8 +334,6 @@ class MdImageNode(BaseNode):
                     current_time - request_timestamps[0] >= window_seconds:
                 request_timestamps.popleft()
         request_timestamps.append(current_time)
-
-
 
 if __name__ == '__main__':
     state = {
