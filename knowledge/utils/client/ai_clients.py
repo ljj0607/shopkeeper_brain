@@ -75,11 +75,11 @@ class AIClients(BaseClientManager):
                 model_kwargs['response_format'] = {"type": "json_object"}
 
             llm_client = ChatOpenAI(
-                model_name=model_name,
+                model=model_name,
                 temperature=0,
-                openai_api_key=api_key,
-                openai_api_base=base_url,
-                model_kwargs=model_kwargs
+                api_key=api_key,
+                base_url=base_url,
+                model_kwargs=model_kwargs,
             )
             logger.info(f"OpenAI LLM 客户端初始化成功")
             return llm_client

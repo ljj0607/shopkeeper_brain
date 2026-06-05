@@ -7,6 +7,7 @@ from knowledge.processor.import_process.nodes.document_spliter_node import Docum
 from knowledge.processor.import_process.nodes.entry_node import EntryNode
 from knowledge.processor.import_process.nodes.md_img_node import MdImageNode
 from knowledge.processor.import_process.nodes.pdf_to_md_node import PdfToMdNode
+from knowledge.processor.import_process.nodes.item_name_recognition_node import ItemNameRecognitionNode
 from knowledge.processor.import_process.state import ImportGraphState, get_default_state
 
 
@@ -29,6 +30,7 @@ def create_import_graph() -> StateGraph:
     graph.add_node("pdf_to_md_node", PdfToMdNode())
     graph.add_node("md_img_node", MdImageNode())
     graph.add_node("document_spliter_node", DocumentSpliterNode())
+    graph.add_node("item_name_recognition_node", ItemNameRecognitionNode())
 
     # 3、边定义
     graph.add_edge("__start__", "entry_node")
@@ -40,7 +42,8 @@ def create_import_graph() -> StateGraph:
     })
     graph.add_edge("pdf_to_md_node", "md_img_node")
     graph.add_edge("md_img_node", "document_spliter_node")
-    graph.add_edge("document_spliter_node", "__end__")
+    graph.add_edge("document_spliter_node", "item_name_recognition_node")
+    graph.add_edge("item_name_recognition_node", "__end__")
 
     # 4 编译图形状
     return  graph.compile()
