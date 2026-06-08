@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>掌柜智库 · 知识库导入</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    /* ── 页面头部 ─────────────────────────────────────────── */
+    .page-header {
+      max-width: 780px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: #185FA5;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo svg { width: 22px; height: 22px; }
+    .page-title { font-size: 18px; font-weight: 500; color: #0C447C; }
+    .page-sub   { font-size: 12px; color: #888780; margin-top: 1px; }
+
+    /* ── 卡片容器 ─────────────────────────────────────────── */
+    .card {
+      max-width: 780px;
+      margin: 0 auto 20px;
+      background: #fff;
+      border: 0.5px solid #d3d1c7;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #444441;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title svg { width: 15px; height: 15px; color: #185FA5; flex-shrink: 0; }
+
+    /* ── 上传区域 ─────────────────────────────────────────── */
+    .drop-zone {
+      border: 1.5px dashed #b5d4f4;
+      border-radius: 10px;
+      background: #f6faff;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #378add;
+      background: #eaf3fd;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon {
+      width: 48px; height: 48px;
+      margin: 0 auto 12px;
+      background: #e6f1fb;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .drop-icon svg { width: 26px; height: 26px; color: #378add; }
+    .drop-title {
+      font-size: 15px; font-weight: 500; color: #0C447C; margin-bottom: 4px;
+    }
+    .drop-hint { font-size: 12px; color: #888780; }
+    .drop-hint span {
+      display: inline-block;
+      margin-top: 6px;
+      background: #f1efe8;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #5f5e5a;
+    }
+
+    /* ── 流程步骤条 ───────────────────────────────────────── */
+    .pipeline {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-top: 16px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .pipeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 72px;
+      position: relative;
+    }
+    .pipeline-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 14px;
+      left: calc(50% + 14px);
+      width: calc(100% - 28px);
+      height: 1.5px;
+      background: #d3d1c7;
+      z-index: 0;
+      transition: background .4s;
+    }
+    .pipeline-step.done:not(:last-child)::after   { background: #639922; }
+    .pipeline-step.running:not(:last-child)::after { background: #b5d4f4; }
+
+    .step-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid #d3d1c7;
+      background: #f1efe8;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1;
+      transition: all .3s;
+      flex-shrink: 0;
+    }
+    .step-dot svg { width: 14px; height: 14px; color: #888780; }
+    .pipeline-step.done   .step-dot { background: #eaf3de; border-color: #639922; }
+    .pipeline-step.done   .step-dot svg { color: #3b6d11; }
+    .pipeline-step.running .step-dot {
+      background: #e6f1fb; border-color: #378add;
+      animation: pulseDot 1.4s ease-in-out infinite;
+    }
+    .pipeline-step.running .step-dot svg { color: #185FA5; }
+    @keyframes pulseDot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(55,138,221,.25); }
+      50%       { box-shadow: 0 0 0 6px rgba(55,138,221,.0); }
+    }
+    .step-label {
+      font-size: 11px;
+      color: #888780;
+      margin-top: 5px;
+      text-align: center;
+      line-height: 1.3;
+      transition: color .3s;
+    }
+    .pipeline-step.done    .step-label { color: #3b6d11; }
+    .pipeline-step.running .step-label { color: #185FA5; font-weight: 500; }
+    .step-dur {
+      font-size: 10px;
+      color: #185FA5;
+      margin-top: 2px;
+      text-align: center;
+      min-height: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── 文件任务列表 ─────────────────────────────────────── */
+    #taskList { display: flex; flex-direction: column; gap: 16px; }
+
+    .task-card {
+      background: #fff;
+      border: 0.5px solid #d3d1c7;
+      border-radius: 12px;
+      padding: 20px 20px 16px;
+      max-width: 780px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .task-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .task-file-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .task-file-icon.pdf { background: #fcebeb; }
+    .task-file-icon.md  { background: #e6f1fb; }
+    .task-file-icon svg { width: 18px; height: 18px; }
+    .task-file-icon.pdf svg { color: #a32d2d; }
+    .task-file-icon.md  svg { color: #185FA5; }
+
+    .task-meta { flex: 1; min-width: 0; }
+    .task-name {
+      font-size: 14px; font-weight: 500; color: #2c2c2a;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .task-size { font-size: 12px; color: #888780; margin-top: 1px; }
+
+    .task-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+      flex-shrink: 0;
+    }
+    .badge-uploading  { background: #faeeda; color: #854f0b; }
+    .badge-processing { background: #e6f1fb; color: #0c447c; }
+    .badge-completed  { background: #eaf3de; color: #27500a; }
+    .badge-failed     { background: #fcebeb; color: #791f1f; }
+
+    /* 进度条 */
+    .progress-track {
+      height: 4px;
+      background: #f1efe8;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 2px;
+      background: #378add;
+      transition: width .5s ease, background .4s;
+    }
+    .progress-fill.done { background: #639922; }
+    .progress-fill.failed { background: #e24b4a; }
+
+    /* 耗时汇总 */
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #888780;
+    }
+    .task-total-dur { color: #185FA5; }
+
+    /* ── 空状态 ───────────────────────────────────────────── */
+    .empty-hint {
+      text-align: center;
+      padding: 32px;
+      color: #b4b2a9;
+      font-size: 13px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* ── Toast ────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #444441; color: #fff;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; pointer-events: none;
+      transition: transform .3s, opacity .3s;
+      opacity: 0; z-index: 999;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- 页头 -->
+<header class="page-header">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    </svg>
+  </div>
+  <div>
+    <div class="page-title">掌柜智库</div>
+    <div class="page-sub">知识库文件导入管理</div>
+  </div>
+</header>
+
+<!-- 上传卡片 -->
+<div class="card">
+  <div class="card-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+    </svg>
+    上传文件
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".pdf,.md" multiple>
+    <div class="drop-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+      </svg>
+    </div>
+    <div class="drop-title">点击选择或拖拽文件到此处</div>
+    <div class="drop-hint">
+      支持 PDF 和 Markdown 文件，可同时上传多个
+      <br><span>.pdf &nbsp;·&nbsp; .md</span>
+    </div>
+  </div>
+
+  <!-- 导入流程说明 -->
+  <div style="margin-top:20px;">
+    <div class="card-title" style="margin-bottom:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      导入流程
+    </div>
+    <div class="pipeline" id="pipelineDemo">
+      <!-- 由 JS 生成 -->
+    </div>
+  </div>
+</div>
+
+<!-- 任务列表 -->
+<div id="taskList"></div>
+<div class="empty-hint" id="emptyHint">上传文件后，导入任务将在此处显示</div>
+
+<!-- Toast 提示 -->
+<div id="toast"></div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:8000';
+
+// 全部流程节点定义（顺序、显示名称）
+const ALL_NODES = [
+  { key: 'upload_file',             label: '上传\n文件' },
+  { key: 'entry_node',             label: '入口\n检测' },
+  { key: 'pdf_to_md_node',         label: 'PDF\n转MD' },
+  { key: 'md_img_node',            label: '图片\n处理' },
+  { key: 'document_spliter_node',  label: '文档\n切分' },
+  { key: 'item_name_recognition_node', label: '商品名\n识别' },
+  { key: 'embedding_chunks_node',  label: '向量\n嵌入' },
+  { key: 'milvus_import_node',     label: '写入\nMilvus' },
+];
+
+// SVG 图标集
+const icons = {
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  spin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .9s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+  pending: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`,
+  pdf: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  md: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="9" y2="18"/><polyline points="9 12 12 15 15 12"/><line x1="15" y1="15" x2="15" y2="18"/></svg>`,
+};
+
+// 添加旋转 keyframe
+const styleEl = document.createElement('style');
+styleEl.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(styleEl);
+
+// ── 渲染演示流程条（静态） ─────────────────────────────────
+function buildDemoPipeline() {
+  const cont = document.getElementById('pipelineDemo');
+  cont.innerHTML = ALL_NODES.map((n, i) => `
+    <div class="pipeline-step">
+      <div class="step-dot">${icons.pending}</div>
+      <div class="step-label">${n.label.replace('\n', '<br>')}</div>
+      <div class="step-dur"></div>
+    </div>
+  `).join('');
+}
+buildDemoPipeline();
+
+// ── Toast ─────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── 工具 ─────────────────────────────────────────────────
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1024 / 1024).toFixed(2) + ' MB';
+}
+function formatDur(s) {
+  if (s < 60) return s.toFixed(1) + 's';
+  return Math.floor(s / 60) + 'm' + (s % 60).toFixed(0) + 's';
+}
+
+// ── 创建任务卡片 ──────────────────────────────────────────
+function createTaskCard(file) {
+  const isPdf = file.name.toLowerCase().endsWith('.pdf');
+  const id = 'task-' + Math.random().toString(36).slice(2, 9);
+
+  const card = document.createElement('div');
+  card.className = 'task-card';
+  card.id = id;
+  card.innerHTML = `
+    <div class="task-head">
+      <div class="task-file-icon ${isPdf ? 'pdf' : 'md'}">${isPdf ? icons.pdf : icons.md}</div>
+      <div class="task-meta">
+        <div class="task-name" title="${file.name}">${file.name}</div>
+        <div class="task-size">${formatBytes(file.size)}</div>
+      </div>
+      <div class="task-badge badge-uploading" id="${id}-badge">上传中</div>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="${id}-bar"></div>
+    </div>
+
+    <div class="pipeline" id="${id}-pipeline">
+      ${ALL_NODES.filter(n => isPdf || n.key !== 'pdf_to_md').map(n => `
+        <div class="pipeline-step" data-key="${n.key}">
+          <div class="step-dot">${icons.pending}</div>
+          <div class="step-label">${n.label.replace('\n', '<br>')}</div>
+          <div class="step-dur"></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="task-footer">
+      <span id="${id}-msg">正在上传文件...</span>
+      <span class="task-total-dur" id="${id}-dur"></span>
+    </div>
+  `;
+
+  document.getElementById('taskList').prepend(card);
+  document.getElementById('emptyHint').style.display = 'none';
+  return id;
+}
+
+// ── 更新进度条 ────────────────────────────────────────────
+function setProgress(id, pct, state) {
+  const bar = document.getElementById(id + '-bar');
+  if (!bar) return;
+  bar.style.width = Math.min(100, pct) + '%';
+  bar.className = 'progress-fill' + (state === 'done' ? ' done' : state === 'failed' ? ' failed' : '');
+}
+
+// ── 更新流程步骤条 ─────────────────────────────────────────
+function updatePipeline(id, doneList, runningList, durations) {
+  const container = document.getElementById(id + '-pipeline');
+  if (!container) return;
+
+  container.querySelectorAll('.pipeline-step').forEach(step => {
+    const key = step.dataset.key;
+    const isDone    = doneList.includes(key);
+    const isRunning = runningList.includes(key);
+
+    step.className = 'pipeline-step' + (isDone ? ' done' : isRunning ? ' running' : '');
+    step.querySelector('.step-dot').innerHTML = isDone ? icons.check : isRunning ? icons.spin : icons.pending;
+
+    const durEl = step.querySelector('.step-dur');
+    durEl.textContent = (isDone && durations && durations[key] !== undefined)
+      ? formatDur(durations[key]) : '';
+  });
+}
+
+// ── 更新徽章 ──────────────────────────────────────────────
+function setBadge(id, status) {
+  const badge = document.getElementById(id + '-badge');
+  if (!badge) return;
+  const map = {
+    uploading:  ['上传中',   'badge-uploading'],
+    processing: ['导入中',   'badge-processing'],
+    completed:  ['已完成',   'badge-completed'],
+    failed:     ['导入失败', 'badge-failed'],
+  };
+  const [text, cls] = map[status] || ['未知', 'badge-uploading'];
+  badge.textContent = text;
+  badge.className = 'task-badge ' + cls;
+}
+
+// ── 轮询任务状态 ──────────────────────────────────────────
+function pollStatus(taskId, cardId, totalNodes) {
+  let stopped = false;
+
+  const timer = setInterval(async () => {
+    if (stopped) return;
+    try {
+      const res = await fetch(`${API_BASE}/status/${taskId}`);
+      if (!res.ok) throw new Error('status error');
+      const data = await res.json();
+
+      const done    = Array.isArray(data.done_list)    ? data.done_list    : [];
+      const running = Array.isArray(data.running_list) ? data.running_list : [];
+      const durs    = data.durations || {};
+
+      updatePipeline(cardId, done, running, durs);
+
+      // 进度：已完成节点数 / 总节点数
+      let pct = (done.length / totalNodes) * 100;
+      if (running.length) pct = Math.min(pct + (0.5 / totalNodes) * 100, 96);
+
+      // 总耗时
+      const totalDur = Object.values(durs).reduce((a, b) => a + b, 0);
+      const durEl = document.getElementById(cardId + '-dur');
+      if (durEl && totalDur > 0) durEl.textContent = '总耗时 ' + formatDur(totalDur);
+
+      const msgEl = document.getElementById(cardId + '-msg');
+
+      if (data.status === 'completed') {
+        stopped = true; clearInterval(timer);
+        setBadge(cardId, 'completed');
+        setProgress(cardId, 100, 'done');
+        updatePipeline(cardId, done, [], durs);
+        if (msgEl) msgEl.textContent = '导入完成，已写入向量库';
+        showToast('文件导入成功');
+
+      } else if (data.status === 'failed') {
+        stopped = true; clearInterval(timer);
+        setBadge(cardId, 'failed');
+        setProgress(cardId, pct, 'failed');
+        if (msgEl) msgEl.textContent = '导入流程异常中止，请检查日志';
+        showToast('文件导入失败');
+
+      } else {
+        setProgress(cardId, pct);
+        setBadge(cardId, 'processing');
+        if (msgEl) {
+          if (running.length) {
+            msgEl.textContent = '正在处理：' + running.join('、');
+          } else {
+            msgEl.textContent = '处理中...';
+          }
+        }
+      }
+    } catch (e) {
+      console.error('poll error', e);
+    }
+  }, 1500);
+}
+
+// ── 上传文件 ──────────────────────────────────────────────
+async function uploadFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['pdf', 'md'].includes(ext)) {
+    showToast(`不支持的文件格式：.${ext}`);
+    return;
+  }
+
+  const isPdf = ext === 'pdf';
+  const totalNodes = isPdf ? ALL_NODES.length : ALL_NODES.length - 1; // 非PDF跳过pdf_to_md
+
+  const cardId = createTaskCard(file);
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    setProgress(cardId, 5);
+
+    const res = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || 'upload failed');
+    }
+
+    const data = await res.json();
+    const taskId = data.task_id;
+
+    setBadge(cardId, 'processing');
+    setProgress(cardId, Math.round(1 / totalNodes * 100));
+    const msgEl = document.getElementById(cardId + '-msg');
+    if (msgEl) msgEl.textContent = '文件已上传，开始导入处理...';
+
+    pollStatus(taskId, cardId, totalNodes);
+
+  } catch (e) {
+    console.error(e);
+    setBadge(cardId, 'failed');
+    setProgress(cardId, 0, 'failed');
+    const msgEl = document.getElementById(cardId + '-msg');
+    if (msgEl) msgEl.textContent = '上传失败：' + (e.message || '网络错误');
+    showToast('上传失败，请检查服务是否启动');
+  }
+}
+
+// ── 事件绑定 ──────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  Array.from(e.dataTransfer.files).forEach(uploadFile);
+});
+
+fileInput.addEventListener('change', e => {
+  Array.from(e.target.files).forEach(uploadFile);
+  fileInput.value = '';
+});
+</script>
+</body>
+</html>

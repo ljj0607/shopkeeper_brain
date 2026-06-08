@@ -258,7 +258,7 @@ class DocumentSpliterNode(BaseNode):
         chunks = []
         for section in final_sections:
             file_title = section.get("file_title", "")
-            parnet_title = section.get("parent_title", "")
+            parent_title = section.get("parent_title", "")
             title = section.get("title", "")
             body = section.get("body", "")
 
@@ -266,7 +266,7 @@ class DocumentSpliterNode(BaseNode):
             # 组装 chunk
             chunk = {
                 "file_title": file_title,
-                "parnet_title": parnet_title,
+                "parent_title": parent_title,
                 "title": title,
                 "content": content
             }

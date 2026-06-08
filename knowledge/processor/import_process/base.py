@@ -1,9 +1,12 @@
+import time
 from abc import ABC, abstractmethod
 from typing import TypeVar, Optional
 import logging
 
 from knowledge.processor.import_process.config import ImportConfig, get_config
 from knowledge.processor.import_process.exceptions import ImportProcessError
+from knowledge.utils.task_util import add_running_task, add_done_task, add_node_duration
+
 T = TypeVar("T")  # 泛型状态类型
 
 
@@ -55,9 +58,17 @@ class BaseNode(ABC):
             ImportProcessError: 节点执行失败时抛出
         """
 
+        task_id = state.get("task_id")
         self.logger.info(f"--- {self.name} 开始 ---")
+        add_running_task(task_id, self.name)
+
         try:
+            start_time = time.time()
             result = self.process(state)
+            end_time = time.time()
+
+            add_done_task(task_id, self.name)
+            add_node_duration(task_id, self.name, end_time - start_time)
             self.logger.info(f"--- {self.name} 完成 ---")
             return result
         except ImportProcessError:

@@ -67,7 +67,7 @@ class milvusImportNode(BaseNode):
         # 2、创建索引
         index_params = _MilvusIndexBuilder.build_index_params(milvus_client)
         # 3、创建集合
-        milvus_client.create_collection(collection_name, schema=schema, index_params=index_params)
+        milvus_client.create_collection(collection_name=collection_name, schema=schema, index_params=index_params)
 
 @dataclass
 class _SCALAR_FIELD_SPC:
@@ -90,7 +90,7 @@ class _MilvusSchemaBuilder:
     @staticmethod
     def build_schema(milvus_client: MilvusClient) -> CollectionSchema:
         # 创建 schema
-        schema = milvus_client.create_schema()
+        schema = milvus_client.create_schema(enable_dynamic_field=True)
         # 添加主键字段
         schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True, auto_id=True)
 
@@ -138,7 +138,7 @@ class _MilvusInserter:
 
     def insert_rows(self, chunks: List[Dict[str, Any]]):
         # 1、执行插入操作
-        insert_result = self.milvus_client.insert(self.collection_name, chunks)
+        insert_result = self.milvus_client.insert(self.collection_name, data=chunks)
         chunk_ids = insert_result.get("ids")
 
         for id, chunk in zip(chunk_ids,chunks):

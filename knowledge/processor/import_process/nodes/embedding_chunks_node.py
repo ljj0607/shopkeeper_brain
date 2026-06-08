@@ -60,8 +60,8 @@ class EmbeddingChunksNode(BaseNode):
             # 进行文本嵌入处理
             chunks_batch_content = [f"{c.get("content", "")}" for c in chunks_batch]
             result = generate_bge_m3_hybrid_vectors(bge_m3, chunks_batch_content)
-            dense_list.append(result["dense"])
-            sparse_list.append(result["sparse"])
+            dense_list.extend(result["dense"])
+            sparse_list.extend(result["sparse"])
 
         for index, chunk in enumerate(chunks):
             chunk["dense_vector"] = dense_list[index]
