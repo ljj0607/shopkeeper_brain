@@ -28,6 +28,12 @@ class ItemNameRecognitionNode(BaseNode):
         if dense_vector is not None and sparse_crs is not None:
             self._store_to_milvus(file_title, item_name, dense_vector, sparse_crs)
 
+        # 6.将生成的item_name填充到每个chunks中
+        for chunk in chunks:
+            chunk["item_name"] = item_name
+
+        state["item_name"] = item_name
+        state["chunks"] = chunks
         return state
 
     def validate_state(self, state: ImportGraphState) -> Tuple[str, list]:
