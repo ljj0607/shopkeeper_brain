@@ -50,7 +50,7 @@ def create_import_graph() -> StateGraph:
     graph.add_edge("document_spliter_node", "item_name_recognition_node")
     graph.add_edge("item_name_recognition_node", "embedding_chunks_node")
     graph.add_edge("embedding_chunks_node", "milvus_import_node")
-    graph.add_edge("embedding_chunks_node", "__end__")
+    graph.add_edge("milvus_import_node", "__end__")
 
     # 4 编译图形状
     return  graph.compile()

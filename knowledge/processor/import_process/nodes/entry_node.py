@@ -7,9 +7,15 @@ from knowledge.processor.import_process.state import ImportGraphState, get_defau
 
 
 class EntryNode(BaseNode):
-    """" 导入节点 """
+    """"
+        导入节点
+        功能：
+        1、校验导入文件路径及输出目录
+        2、识别文件类型并初始化状态。
+    """
 
-    name = "entry"
+
+    name = "entry_node"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:
         # 1、校验 state 参数

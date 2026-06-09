@@ -10,6 +10,18 @@ from knowledge.processor.import_process.state import ImportGraphState
 from knowledge.utils.markdown_utils import MarkdownTableLinearizer
 
 class DocumentSpliterNode(BaseNode):
+    """
+        文档切分节点
+        功能：
+        1. 读取并校验 Markdown 文档内容
+        2. 按 Markdown 标题结构切分文档
+        3. 解析标题层级关系（标题、父标题）
+        4. 处理表格内容并转换为线性文本
+        5. 对超长章节进行二次切分
+        6. 对过短章节进行合并优化
+        7. 生成标准 Chunk 数据结构
+        8. 将 Chunk 写入导入流程状态
+    """
     name = "document_spliter_node"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:

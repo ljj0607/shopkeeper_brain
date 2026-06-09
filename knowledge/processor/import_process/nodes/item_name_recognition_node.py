@@ -12,7 +12,16 @@ from knowledge.utils.client.ai_clients import AIClients
 from knowledge.utils.client.storage_clients import StorageClients
 
 class ItemNameRecognitionNode(BaseNode):
-    """ 商品名识别 """
+    """
+        商品名称识别节点
+
+        功能：
+        1. 从文档切片中提取关键内容
+        2. 调用 LLM 识别文档对应的商品名称
+        3. 调用 BGE-M3 对商品名称进行向量化
+        4. 将商品名称及向量信息存储到 Milvus
+        5. 为所有 Chunk 补充 item_name 字段
+    """
     name = "item_name_recognition_node"
 
     def process(self, state:ImportGraphState) -> ImportGraphState:

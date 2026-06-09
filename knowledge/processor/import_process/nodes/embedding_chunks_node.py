@@ -10,7 +10,14 @@ from knowledge.utils.embedding_util import generate_bge_m3_hybrid_vectors
 
 
 class EmbeddingChunksNode(BaseNode):
-    """ 为每个文档切片生成稠密向量和稀疏向量 """
+    """
+        文档切片向量化节点
+
+        调用 bge-m3 嵌入模型生成向量
+        为每个 Chunk 生成稠密向量（Dense Vector）
+        为每个 Chunk 生成稀疏向量（Sparse Vector）
+        将向量结果写回 Chunk
+    """
     name = "embedding_chunks_node"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:

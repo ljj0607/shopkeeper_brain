@@ -7,9 +7,14 @@ from knowledge.processor.import_process.base import BaseNode
 from knowledge.processor.import_process.exceptions import StateFieldError, PdfConversionError
 from knowledge.processor.import_process.state import ImportGraphState
 
-""" PDF 转 Markdown 节点"""
-
 class PdfToMdNode(BaseNode):
+    """
+        PDF 转 Markdown 节点
+        功能：
+        1、校验 PDF 文件及输出目录
+        2、调用Mineru工具解析 PDF，生成 Markdown 文件
+        3、将 Markdown 文件路径写入状态对象中
+    """
     name = "pdf_to_md_node"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:

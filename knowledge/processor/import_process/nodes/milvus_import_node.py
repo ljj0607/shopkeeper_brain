@@ -8,7 +8,16 @@ from knowledge.processor.import_process.state import ImportGraphState
 from knowledge.utils.client.storage_clients import StorageClients
 
 class milvusImportNode(BaseNode):
-    """ 向量数据存储 """
+    """
+        Milvus 向量存储节点
+        功能：
+        1. 校验 Chunk 数据完整性
+        2. 创建 Milvus 客户端
+        3. 创建 Chunk 存储集合（Collection）
+        4. 创建 Schema 与向量索引
+        5. 将 Chunk 数据批量写入 Milvus
+        6. 回填生成的 Chunk ID
+    """
     name = "milvus_import_node"
 
     def process(self, state: ImportGraphState) -> ImportGraphState:
