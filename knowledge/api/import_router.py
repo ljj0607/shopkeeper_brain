@@ -28,7 +28,7 @@ if static_resource_page_dir:
 def upload_file(
         file: UploadFile,
         background_tasks:BackgroundTasks, # 后台任务管理器
-        upload_service: UploadService = Depends(get_upload_service),
+        upload_service: UploadService = Depends(get_upload_service), # 注入
 
 ):
     task_id,file_dir,import_file_path = upload_service.process_upload_file(file)

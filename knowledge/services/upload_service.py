@@ -2,6 +2,7 @@ import logging
 import os.path
 import shutil
 import uuid
+import time
 from datetime import datetime
 
 from fastapi import UploadFile
@@ -12,9 +13,9 @@ from knowledge.processor.import_process.config import ImportConfig
 from knowledge.processor.import_process.config import get_config
 from knowledge.processor.import_process.exceptions import FileProcessingError
 from knowledge.processor.import_process.main_graph import create_import_graph
+from knowledge.processor.import_process.state import get_default_state
 from knowledge.utils.client.storage_clients import StorageClients, logger
-from knowledge.utils.task_util import update_task_status, TASK_STATUS_COMPLETED, TASK_STATUS_FAILED, get_task_info, \
-    TASK_STATUS_PROCESSING
+from knowledge.utils.task_util import update_task_status, get_task_info, add_running_task, add_node_duration, add_done_task
 
 
 class UploadService:
@@ -28,6 +29,9 @@ class UploadService:
 
         # 1、生成当前文件上传任务的 task_id
         task_id = uuid.uuid4().hex[:8]
+        update_task_status(task_id, "running")
+        add_running_task(task_id, "upload_file")
+        start_time = time.time()
 
         # 2、获取文件在服务器进行保存的目录路径
         base_dir = get_local_base_dir()
@@ -39,34 +43,10 @@ class UploadService:
         # 4、将用户上传的文件保存到 Minio
         self.save_upload_file_to_minio(import_file_path, file.filename)
 
+        end_time = time.time()
+        add_done_task(task_id, "upload_file")
+        add_node_duration(task_id, "upload_file", end_time - start_time)
         return task_id,file_dir,import_file_path
-
-    def run_import_graph(self, task_id, file_dir, import_file_path):
-        """ 运行文件导入图谱 """
-
-        # 获取状态图
-        graph_app = create_import_graph()
-        state = {
-            "task_id": task_id,
-            "file_dir": file_dir,
-            "import_file_path": import_file_path
-        }
-
-        # 运行状态图
-
-        try:
-            # 更新任务状态为 任务处理中
-            update_task_status(task_id, TASK_STATUS_PROCESSING)
-            for event in graph_app.stream(state):
-                for node_name, node_output in event.items():
-                    logger.info(f"{node_name}节点输出：{node_output}")
-            # 更新任务状态为 任务完成
-            update_task_status(task_id, TASK_STATUS_COMPLETED)
-
-        except Exception as e:
-            logger.error(f"任务{task_id}执行失败: {e}")
-            # 更新任务状态为 任务失败
-            update_task_status(task_id, TASK_STATUS_FAILED)
 
     def save_upload_file_to_local(self, file: UploadFile, file_dir) -> str:
         if not file.filename:
@@ -94,7 +74,6 @@ class UploadService:
         bucket_name = get_config().minio_bucket
         object_name = f"origin_files/{datetime.now().strftime("%Y%m%d")}/{filename}"
         try:
-            print("上传开始------")
             minio_client.fput_object(
                 bucket_name=bucket_name,
                 object_name=object_name,
@@ -107,6 +86,25 @@ class UploadService:
         remote_url = f"{ImportConfig().get_minio_base_url()}/{bucket_name}/{object_name}"
         logger.info(f"文件{filename}上传成功，远程URL：{remote_url}")
         return remote_url
+
+    def run_import_graph(self, task_id, file_dir, import_file_path):
+        """ 运行文件导入图谱 """
+        setup_logging(logging.DEBUG)
+        # 获取状态图
+        graph = create_import_graph()
+        state = get_default_state()
+        state["task_id"] = task_id
+        state["file_dir"] = file_dir
+        state["import_file_path"] = import_file_path
+        try:
+            # 更新任务状态为 任务处理中
+            for event in graph.stream(state):
+                for node, output in event.items():
+                    logger.info(f"{node}节点输出：{output}")
+            # 更新任务状态为 任务完成
+            update_task_status(task_id, "completed")
+        except Exception as e:
+            update_task_status(task_id, "failed")
 
     def get_status(self, task_id: str):
         result = get_task_info(task_id)

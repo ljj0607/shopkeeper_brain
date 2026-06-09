@@ -57,9 +57,8 @@ class BaseNode(ABC):
         Raises:
             ImportProcessError: 节点执行失败时抛出
         """
-
-        task_id = state.get("task_id")
         self.logger.info(f"--- {self.name} 开始 ---")
+        task_id = state.get("task_id")
         add_running_task(task_id, self.name)
 
         try:

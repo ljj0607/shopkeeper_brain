@@ -25,23 +25,23 @@ TASK_STATUS_COMPLETED = "completed"  # 任务完成
 TASK_STATUS_FAILED = "failed"  # 任务失败
 
 _NODE_NAME_TO_CN: Dict[str, str] = {
-    "upload_file": "上传文件",
-    "entry_node": "检查文件",
-    "pdf_to_md_node": "PDF转Markdown",
-    "md_to_img_node": "Markdown图片处理",
-    "document_split_node": "文档切分",
-    "item_name_recognition_node": "主体名称识别",
-    "embedding_chunk_node": "向量生成",
-    "import_milvus_node": "导入向量数据库",
-    "__end__": "处理完成",
-    # --- Query 流程节点（kb/query_process/main_graph.py）---
-    "item_name_confirmed_node": "确认问题产品",
-    "answer_output_node": "生成答案",
-    "reranker_node": "重排序",
-    "rrf_merge_node": "倒排融合",
-    "web_mcp_search_node": "网络搜索",
-    "hybrid_vector_search_node": "切片搜索",
-    "hyde_vector_search_node": "切片搜索(假设性文档)"
+    # "upload_file": "上传文件",
+    # "entry_node": "检查文件",
+    # "pdf_to_md_node": "PDF转Markdown",
+    # "md_to_img_node": "Markdown图片处理",
+    # "document_split_node": "文档切分",
+    # "item_name_recognition_node": "主体名称识别",
+    # "embedding_chunk_node": "向量生成",
+    # "import_milvus_node": "导入向量数据库",
+    # "__end__": "处理完成",
+    # # --- Query 流程节点（kb/query_process/main_graph.py）---
+    # "item_name_confirmed_node": "确认问题产品",
+    # "answer_output_node": "生成答案",
+    # "reranker_node": "重排序",
+    # "rrf_merge_node": "倒排融合",
+    # "web_mcp_search_node": "网络搜索",
+    # "hybrid_vector_search_node": "切片搜索",
+    # "hyde_vector_search_node": "切片搜索(假设性文档)"
 }
 
 
