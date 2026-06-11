@@ -13,7 +13,7 @@ def test_milvus():
     try:
         from pymilvus import MilvusClient, utility
         milvs_client = MilvusClient(
-            uri=os.getenv("MILVUS_URL", "http://192.168.44.101:19530")
+            uri=os.getenv("MILVUS_URL", "http://47.116.51.88:19530")
         )
         version = milvs_client.get_server_version()
         print(f"  ✓ Milvus 连接成功，版本: {version}")

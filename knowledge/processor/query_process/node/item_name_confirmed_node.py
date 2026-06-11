@@ -127,7 +127,6 @@ class _ItemNameAligner:
     def search_and_align(self, item_names: List[str]) -> Tuple[List[str], List[str]]:
         # 1. 向量检索
         search_results = self.search_vector(item_names)
-        confirmed, options = [], []
         if not search_results:
             return [], []
 
@@ -230,7 +229,8 @@ class _ItemNameAligner:
                        and m.get('item_name') not in confirmed]
                 if mid:
                     for m in mid[:config.item_name_max_options]:
-                        options.append(m.get('item_name'))
+                        if m.get('item_name') in options:
+                            options.append(m.get('item_name'))
 
         return confirmed, options
 
@@ -256,7 +256,7 @@ class _ItemNameAligner:
 
 if __name__ == "__main__":
     state = get_default_state()
-    state["original_query"] = "万用表"
+    state["original_query"] = "如何使用RS-12数字万用表测量电阻"
     node = ItemNameConfirmedNode()
     result = node(state)
     print(json.dumps(result, indent=2, ensure_ascii=False))
