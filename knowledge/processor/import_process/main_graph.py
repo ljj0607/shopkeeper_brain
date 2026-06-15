@@ -28,13 +28,13 @@ def create_import_graph() -> StateGraph:
     graph = StateGraph(ImportGraphState)
 
     # 2、添加节点
-    graph.add_node("entry_node", EntryNode())
-    graph.add_node("pdf_to_md_node", PdfToMdNode())
-    graph.add_node("md_img_node", MdImageNode())
-    graph.add_node("document_spliter_node", DocumentSpliterNode())
-    graph.add_node("item_name_recognition_node", ItemNameRecognitionNode())
-    graph.add_node("embedding_chunks_node", EmbeddingChunksNode())
-    graph.add_node("milvus_import_node", milvusImportNode())
+    graph.add_node("entry_node", EntryNode()) # 导入文档
+    graph.add_node("pdf_to_md_node", PdfToMdNode()) # pdf 装 markdown
+    graph.add_node("md_img_node", MdImageNode()) # markdown 图片处理
+    graph.add_node("document_spliter_node", DocumentSpliterNode()) # 文档切分
+    graph.add_node("item_name_recognition_node", ItemNameRecognitionNode()) # 商品名识别
+    graph.add_node("embedding_chunks_node", EmbeddingChunksNode()) # 文档切片向量化
+    graph.add_node("milvus_import_node", milvusImportNode()) # 存入 Minvus 中
 
 
     # 3、边定义

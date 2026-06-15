@@ -11,6 +11,7 @@ from knowledge.utils.client.ai_clients import AIClients
 from knowledge.utils.client.storage_clients import StorageClients
 from knowledge.utils.embedding_util import generate_bge_m3_hybrid_vectors
 from knowledge.utils.milvus_util import create_hybrid_search_requests, execute_hybrid_search_query
+from knowledge.utils.mongo_history_util import get_recent_messages
 
 
 class ItemNameConfirmedNode(BaseNode):
@@ -18,7 +19,7 @@ class ItemNameConfirmedNode(BaseNode):
         商品名称确认节点
         功能流程：
         1、从用户原始问题中提取商品名称
-        2、结合历史上下文调用 LLM 改成问题
+        2、结合历史上下文调用 LLM 生成问题的商品名
         3、将提取出的商品名称进行向量检索
         4、与知识库中的商品名进行相识度对齐
         5、根据置信度划为：
@@ -38,7 +39,21 @@ class ItemNameConfirmedNode(BaseNode):
         # 1、从 state 中获取原始查询问题"original_query"
         original_query = state.get("original_query")
         # 2、根据 session_id 查新历史记录从（MongoDB 中查询）
-        history_context = ""
+        session_id = state.get("session_id")
+        history_list= get_recent_messages(session_id=session_id)
+        state["history"] = history_list
+        # 格式化历史记录
+        nick_names = {
+            "user": "用户",
+            "assistant": "组手"
+        }
+        formatted_lines = []
+        for message in history_list:
+            role = message.get("role", "")
+            text = message.get("text")
+            formatted_line = f"{nick_names.get(role)}:{text}"
+            formatted_lines.append(formatted_line)
+        history_context = "\n".join(formatted_lines)
         # 3、将原始查询问题与历史记录作为上下文，封装提示词，调用 LLM 生成问题的商品名，并对问题进行改写
         item_names, rewritten_query = self.extractor.extract_item_name(original_query, history_context)
         # 4、将 LLM 生成的 item_name与向量数据库中的 item_name进行对齐，并分类 confirmed[]、options[]

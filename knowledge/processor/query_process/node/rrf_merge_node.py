@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from knowledge.processor.query_process.base import BaseNode
 from knowledge.processor.query_process.state import QueryGraphState
@@ -10,10 +10,11 @@ class RRFMergeNode(BaseNode):
         执行RRF融合流程
         功能：
         1、获取混合向量检索和假设性检索结果
-        2、校验检索结果的有效性
-        3、使用 rrf 算法计算融合分数
-        4、按分数降序排序
-        5、映射最终结果
+        2、定义标准化两路结果的数据结构
+        3、设置两路权重
+        4、使用 rrf 算法计算融合分数
+        5、按分数降序排序
+        6、映射最终结果
     """
     name = "rrf_merge_node"
 
@@ -21,20 +22,20 @@ class RRFMergeNode(BaseNode):
         # 1 获取混合向量检索和 HyDE 检索两路的结果
         embedding_chunks = state.get("embedding_chunks", [])
         hyde_embedding_chunks = state.get("hyde_embedding_chunks", [])
-
+        # 2、定义标准化两路结果的数据结构
         validate_embedding_chunks = self._validate_search_results(embedding_chunks)
         validate_hyde_embedding_chunks = self._validate_search_results(hyde_embedding_chunks)
-        # 2、定义两路检索结果和对应录的权重映射表
+        # 3、设置两路权重
         rrf_inputs = [
             (validate_embedding_chunks, 1.0),
             (validate_hyde_embedding_chunks, 1.0),
         ]
-        # 3、利用 RRF 计算两路文档的分数
-        rrf_results = self.rrf_merge(rrf_inputs)
-        if not rrf_results:
+        # 4、进行 RRF 融合（算法）
+        rrf_chunks = self.rrf_merge(rrf_inputs)
+        if not rrf_chunks:
             return  state
 
-        state["rrf_chunks"] = [chunk for chunk, score in rrf_results]
+        state["rrf_chunks"] = rrf_chunks
         return state
 
     def _validate_search_results(self, chunks: List[Dict[str, Any]]) ->  List[Dict[str, Any]]:
@@ -45,14 +46,20 @@ class RRFMergeNode(BaseNode):
         for chunk in chunks:
             if not chunk or not isinstance(chunk, dict):
                 continue
-
             entity = chunk.get("entity")
             if not entity or not isinstance(entity, dict):
                 continue
-            validate_chunks.append(chunk)
+            id = chunk.get("id")
+            if not id:
+                continue
+            formatted_chunk = {
+                "id": id,
+                **entity,
+            }
+            validate_chunks.append(formatted_chunk)
         return validate_chunks
 
-    def rrf_merge(self, rrf_inputs):
+    def rrf_merge(self, rrf_inputs) -> List[Dict[str, Any]]:
         """
             Args:
                 rrf_inputs: 输入的文档列表，每个文档是一个字典，包含"chunk_id"和"score"字段
@@ -64,26 +71,23 @@ class RRFMergeNode(BaseNode):
         chunk_scores = {}
         chunk_data = {}
         # 2、分别遍历混合检索、HyDE 检索的搜索结果，并进行 RRF计算
-        for search_results, weight in rrf_inputs:
-            for index, chunk in enumerate(search_results):
-                # print(json.dumps(item, ensure_ascii=False, indent=4))
+        for chunk_list, weight in rrf_inputs:
+            for index, chunk in enumerate(chunk_list):
                 id = chunk.get("id")
-                if not id:
-                    continue
                 # 1、计算 RRF 分数
                 i = index + 1
                 rrf_score = weight / (rrf_k + i)
                 # 2、将 rrf 分数添加到 chunk_score字典中
                 chunk_scores[id] = chunk_scores.get(id, 0.0) + rrf_score
                 chunk_data.setdefault(id, chunk)
-
         # 3、将chunk_scores和chunk_data进行合并
         rrf_results = []
         for id, score in chunk_scores.items():
             rrf_results.append((chunk_data.get(id), score))
-        # # 4、排序
+        # 4、按分数降序排序
         rrf_results = sorted(rrf_results, key=lambda x: x[1], reverse=True)
-        return rrf_results[:self.config.rrf_max_results]
+        rrf_chunks = [chunk for chunk, score in rrf_results]
+        return rrf_chunks[:self.config.rrf_max_results]
 if __name__ == "__main__":
     state = {
         "session_id": "",
@@ -235,4 +239,3 @@ if __name__ == "__main__":
     node = RRFMergeNode()
     result = node(state)
     print(json.dumps(result, indent=4, ensure_ascii=False))
-

@@ -31,7 +31,7 @@ class QueryConfig:
         default_factory=lambda: float(os.getenv("RERANK_GAP_RATIO", "0.25"))
     )
     rerank_gap_abs: float = field(
-        default_factory=lambda: float(os.getenv("RERANK_GAP_ABS", "0.5"))
+        default_factory=lambda: float(os.getenv("RERANK_GAP_ABS", "0.15"))
     )
 
     # ==================== RRF 配置 ====================
