@@ -43,10 +43,9 @@ def upload_file(
     )
 
     return UploadResponse(
-        message=f"｛file.filename｝文件上传成功",
+        message=f"{file.filename}文件上传成功",
         task_id=task_id,
     )
-
 @app.get("/status/{task_id}", response_model=TaskStatusResponse)
 def status(
         task_id: str,

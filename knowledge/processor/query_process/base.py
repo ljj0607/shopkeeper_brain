@@ -2,14 +2,16 @@
 
 定义统一的节点接口规范，提供通用功能。
 """
+import time
 from abc import ABC, abstractmethod
 from typing import TypeVar, Optional
 import logging
 from knowledge.processor.query_process.config import QueryConfig, get_config
 from knowledge.processor.query_process.exceptions import QueryProcessError
+from knowledge.utils.sse_util import push_sse_event, SSEEvent
+from knowledge.utils.task_util import TASK_STATUS_PROCESSING, get_done_task_list, add_running_task, add_done_task, add_node_duration, get_running_task_list, TASK_STATUS_FAILED
 
 T = TypeVar("T")  # 泛型状态类型
-
 
 class BaseNode(ABC):
     """查询流程节点基类。
@@ -61,9 +63,39 @@ class BaseNode(ABC):
         Raises:
             QueryProcessError: 节点执行失败时抛出。
         """
+        task_id = state.get("task_id")
+        is_stream = state.get("is_stream")
         try:
             self.logger.info(f"--- {self.name} 开始 ---")
+            if task_id:
+                add_running_task(task_id, self.name) # 当前正准备执行的节点加入
+                if is_stream:
+                    push_sse_event(
+                        task_id=task_id,
+                        event=SSEEvent.PROGRESS,
+                        data={
+                            "status": TASK_STATUS_PROCESSING,
+                            "done_list": get_done_task_list(task_id),
+                            "running_list": get_running_task_list(task_id),
+                        }
+                    )
+
+            start_time = time.time()
             result = self.process(state)
+            end_time = time.time()
+            if task_id:
+                add_done_task(task_id, self.name) # 当前正准备执行的节点加入
+                if is_stream:
+                    push_sse_event(
+                        task_id=task_id,
+                        event=SSEEvent.PROGRESS,
+                        data={
+                            "status": TASK_STATUS_PROCESSING,
+                            "done_list": get_done_task_list(task_id),
+                            "running_list": get_running_task_list(task_id),
+                            "duration": add_node_duration(task_id, self.name, end_time - start_time)
+                        }
+                    )
             self.logger.info(f"--- {self.name} 完成 ---")
             return result
         except Exception as e:

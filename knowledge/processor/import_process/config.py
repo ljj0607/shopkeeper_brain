@@ -31,7 +31,7 @@ class ImportConfig:
     openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
     vl_model: str = field( default_factory=lambda: os.getenv("VL_MODEL"))
     item_model: str = field(default_factory=lambda: os.getenv("ITEM_MODEL"))
-    default_model: str = field(default_factory=lambda: os.getenv("MODEL"))
+    default_model: str = field(default_factory=lambda: os.getenv("LLM_DEFAULT_MODEL"))
 
     # ==================== Milvus 配置 ====================
     milvus_url: str = field(default_factory=lambda: os.getenv("MILVUS_URL"))
